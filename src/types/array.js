@@ -6,6 +6,12 @@ var e = require('../errors'),
 var array = property.extend();
 array._type = 'array';
 
+/**
+ * Will validate an array for proper value.
+ * @param {Array}
+ * @return {Promise}
+ */
+
 array.validate = function(array) {
     if (!Array.isArray(array))
         throw e.FieldValidationError("Not an array.");
@@ -17,6 +23,10 @@ array.validate = function(array) {
         throw e.FieldValidationError("Array too long.");
 
     var validator = this._validator || Promise.resolve;
+
+    /** If passed array is > 1 and an array object, then place values in array and return it. If 
+    * a value inside the array is not a type you understand, then place the error in that index of the
+    * new array */
 
     return Promise.settle(array.map(validator))
         .then(function(results) {
@@ -33,12 +43,14 @@ array.validate = function(array) {
                 }
             });
 
+            /** Return the error on the valid array */
             return errored ?
                 Promise.reject(new e.ArrayValidationError("Invalid array items", errors)) :
                 Promise.resolve(array);
         });
 };
 
+/** Take the prototype of this (array you made above) and create setters for all the values in it */
 util.defineSetters(array, {
 
     of: function(validator) {
